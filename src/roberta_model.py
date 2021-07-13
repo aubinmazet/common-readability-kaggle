@@ -7,37 +7,31 @@ class RobertaModel:
     EMBEDDING_DIM = 238
 
     def build(self, base_model):
-        encoder = self._build_encoder(base_model)
-        model = self._build_model(encoder)
-        return model
-
-    @classmethod
-    def _build_encoder(cls, base_model):
-        encoder = Encoder(embedding_dim=cls.EMBEDDING_DIM, base_model=base_model)
-        return encoder
-
-    @classmethod
-    def _build_model(cls, encoder):
         input_ids = tf.keras.layers.Input(
-            shape=(cls.MAX_LENGTH,), dtype=tf.int32, name="input_ids"
+            shape=(self.MAX_LENGTH,), dtype=tf.int32, name="input_ids"
         )
         input_attention_mask = tf.keras.layers.Input(
-            shape=(cls.MAX_LENGTH,), dtype=tf.int32, name="attention_mask"
+            shape=(self.MAX_LENGTH,), dtype=tf.int32, name="attention_mask"
         )
-
+        encoder = self._build_encoder(base_model)
         outputs = encoder(input_ids=input_ids, attention_mask=input_attention_mask)
 
         model = tf.keras.Model(
             inputs=[input_ids, input_attention_mask], outputs=outputs
         )
 
-        optimizer = tf.keras.optimizers.Adam(lr=cls.LEARNING_RATE)
+        optimizer = tf.keras.optimizers.Adam(lr=self.LEARNING_RATE)
         model.compile(
             optimizer=optimizer,
             loss=tf.keras.losses.MeanSquaredError(),
             metrics=[tf.keras.metrics.RootMeanSquaredError()],
         )
         return model
+    
+    @classmethod
+    def _build_encoder(cls, base_model):
+        encoder = Encoder(embedding_dim=cls.EMBEDDING_DIM, base_model=base_model)
+        return encoder
 
 class Encoder(tf.keras.Model):
     DROPOUT_RATE = 0.5
